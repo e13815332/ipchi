@@ -4,7 +4,7 @@ workflows:
     environment:
       vars:
         GO_VERSION: "1.22"
-      xcode: 15.4
+      xcode: 16.2
     scripts:
       - name: Install gomobile
         script: |
