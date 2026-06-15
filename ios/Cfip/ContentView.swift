@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 import Cfip
-import CommonCrypto
+import CryptoKit
 
 struct ScanResult: Identifiable, Codable {
     let id = UUID()
@@ -59,12 +59,8 @@ struct ContentView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: 260)
             Button("解锁") {
-                let data = Data(password.utf8)
-                var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
-                data.withUnsafeBytes { ptr in
-                    _ = CC_SHA256(ptr.baseAddress?.assumingMemoryBound(to: UInt8.self), CC_LONG(data.count), &hash)
-                }
-                let hashStr = hash.map { String(format: "%02x", $0) }.joined()
+                let hash = SHA256.hash(data: Data(password.utf8))
+                let hashStr = hash.compactMap { String(format: "%02x", $0) }.joined()
                 if hashStr == "ea9243ad55213dc096ebd8b639d583c70a27b627b464fa790c16cc96e9c4b20b" {
                     isUnlocked = true
                     showPassword = false
