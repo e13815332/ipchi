@@ -1,0 +1,57 @@
+---
+format_version: "17"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+
+workflows:
+  build-ios:
+    steps:
+    - activate-ssh-key@4:
+        run_if: '{{getenv "SSH_RSA_PRIVATE_KEY" | ne ""}}'
+    - git-clone@8: {}
+    - script@1:
+        title: Install gomobile
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            go install golang.org/x/mobile/cmd/gomobile@latest
+            go install golang.org/x/mobile/cmd/gobind@latest
+            gomobile init
+    - script@1:
+        title: Build xcframework
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            gomobile bind -target ios -o ios/Cfip.xcframework .
+    - xcode-archive@5:
+        inputs:
+        - project_path: ios/Cfip.xcodeproj
+        - scheme: Cfip
+        - configuration: Release
+        - export_method: development
+        - code_sign_identity: ""
+        - disable_code_signing: "yes"
+    - script@1:
+        title: Package IPA
+        inputs:
+        - content: |
+            #!/bin/bash
+            set -ex
+            cd ios
+            mkdir -p Payload
+            cp -R "$BITRISE_ARCHIVE_PATH" Payload/
+            # Actually need the .app from the archive
+            APP_PATH=$(find "$BITRISE_ARCHIVE_PATH" -name "*.app" -type d | head -1)
+            mkdir -p Payload
+            cp -R "$APP_PATH" Payload/
+            zip -r Cfip.ipa Payload
+            rm -rf Payload
+            ls -lh Cfip.ipa
+            envman add --key IPA_PATH --value "$PWD/Cfip.ipa"
+    - deploy-to-bitrise-io@2: {}
+
+meta:
+  bitrise.io:
+    stack: osx-xcode-16.1.x
+    machine_type: g2.4core
