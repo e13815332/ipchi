@@ -4,7 +4,7 @@ import Cfip
 import CryptoKit
 
 struct ScanResult: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     let ip: String
     let bandwidth: Int
     let realBandwidth: Int
