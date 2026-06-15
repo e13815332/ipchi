@@ -53,7 +53,6 @@ jobs:
             DEVELOPMENT_TEAM="" \
             ONLY_ACTIVE_ARCH=NO
 
-          # Create IPA from .app
           mkdir -p Payload
           cp -R build/Cfip.xcarchive/Products/Applications/Cfip.app Payload/
           zip -r Cfip.ipa Payload
