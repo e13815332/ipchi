@@ -1,43 +1,15 @@
 name: Build iOS IPA
-
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - 'ios/**'
-      - 'cfip/**/*.go'
-  push:
-    paths:
-      - 'ios/**'
-      - 'cfip/**/*.go'
-
 jobs:
   build:
     runs-on: macos-14
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25'
-
-      - name: Install gomobile
-        run: |
-          go install golang.org/x/mobile/cmd/gomobile@latest
-          go install golang.org/x/mobile/cmd/gobind@latest
-          gomobile init
-
-      - name: Build xcframework
-        run: |
-          gomobile bind -target ios -o ios/Cfip.xcframework .
-
+      - uses: actions/checkout@v4
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_15.4.app
-
       - name: Build IPA
         working-directory: ios
         run: |
@@ -52,14 +24,11 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
             ONLY_ACTIVE_ARCH=NO
-
           mkdir -p Payload
           cp -R build/Cfip.xcarchive/Products/Applications/Cfip.app Payload/
           zip -r Cfip.ipa Payload
-          rm -rf Payload
-
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
+          rm -rf Payload          
+      - uses: actions/upload-artifact@v4
         with:
           name: Cfip.ipa
           path: ios/Cfip.ipa
